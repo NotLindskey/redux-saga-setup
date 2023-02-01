@@ -6,12 +6,36 @@ import { createStore, combineReducers, applyMiddleware } from "redux";
 import { Provider } from "react-redux";
 import logger from "redux-logger";
 import createSagaMiddleware from "redux-saga";
+import { takeEvery, put } from "redux-saga/effects";
+import axios from "axios";
 
 const sagaMiddleware = createSagaMiddleware();
 
 // my first saga
 // watcher saga
-function* watcherSaga() {}
+function* watcherSaga() {
+	yield takeEvery("FETCH_ELEMENTS", fetchElements);
+	yield takeEvery("POST_ELEMENT", postElement);
+}
+
+function* fetchElements() {
+	try {
+		const elementsResponse = yield axios.get("/api/element");
+		yield put({ type: "SET_ELEMENTS", payload: elementsResponse.data });
+	} catch (error) {
+		console.log("error fetching elements", error);
+	}
+}
+
+function* postElement(action) {
+	// console.log("action", action.payload);
+	try {
+		yield axios.post("/api/element", { newElement: action.payload });
+		yield put({ type: "FETCH_ELEMENTS" });
+	} catch (error) {
+		console.log("posting", error);
+	}
+}
 
 const firstReducer = (state = 0, action) => {
 	if (action.type === "BUTTON_ONE") {
